@@ -34,7 +34,7 @@ struct SimulationParameters
 };
 
 // Laplacian operator creation
-Eigen::MatrixXd createLaplacianOperator(int number_points)
+Eigen::MatrixXd createLaplacianOperator(const int number_points)
 {
     Eigen::VectorXd diagonal_Laplace = -2 * Eigen::VectorXd::Ones(number_points);
 
@@ -52,7 +52,7 @@ Eigen::MatrixXd createLaplacianOperator(int number_points)
 }
 
 // Calculate the robin u_bc value
-double calcRobinValue(const SimulationParameters& params, Eigen::MatrixXd bc_matrix)
+double calcRobinValue(const SimulationParameters& params, const Eigen::MatrixXd bc_matrix)
 {
     Eigen::VectorXd bc_rhs = Eigen::VectorXd::Zero(2);
     bc_rhs(0) = params.u(0);
@@ -64,7 +64,7 @@ double calcRobinValue(const SimulationParameters& params, Eigen::MatrixXd bc_mat
 }
 
 // Explict euler integration
-Eigen::MatrixXd explicitEuler(SimulationParameters& params, Eigen::MatrixXd laplacian_matrix, Eigen::MatrixXd bc_matrix)
+Eigen::MatrixXd explicitEuler(SimulationParameters& params, const Eigen::MatrixXd laplacian_matrix, const Eigen::MatrixXd bc_matrix)
 {
     params.u_bc(0) = calcRobinValue(params, bc_matrix);
     params.u_bc(params.u_bc.size() - 1) = params.u_bc_L;
@@ -103,7 +103,7 @@ int main()
 
         writeToFile(file, params.u);
 
-        //std::cout << "Completed time step " << i << '\n';
+        std::cout << "Completed time step " << i << '\n';
     }
 
     
