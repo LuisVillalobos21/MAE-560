@@ -4,112 +4,170 @@
 #include <cmath>
 #include <fstream>
 
-struct SimulationParameters
+struct Mesh
 {
-    double dx = 0.01;
-    double domain_start = 0.0;
-    double domain_end = 1.0;
-    int number_points = static_cast<int>((domain_end + dx - domain_start) / dx);
-    double alpha = 5e-3;
-    double dt = .009;
-    double a = 0.4;
-    double b = -0.1;
-    double c = 0.1;
+    double dx;
+    double domain_start;
+    double domain_end;
+    int number_points;
+    Eigen::VectorXd x;
+
+    Mesh(double start, double end, double step) 
+    {
+        domain_start = start;
+        domain_end = end;
+        dx = step;
+        number_points = static_cast<int>((domain_end + dx - domain_start) / dx);
+        x = Eigen::VectorXd::LinSpaced(number_points, domain_start, domain_end);
+    }
+
+};
+
+struct Parameters
+{
+    double alpha;
+    double dt;
+    double a;
+    double b;
+    double c;
+};
+
+struct SolutionVector
+{
+    Eigen::VectorXd u;
+    Eigen::VectorXd u_new;
+    SolutionVector(int number_points)
+    {
+        u = Eigen::VectorXd::Zero(number_points);
+        u_new = Eigen::VectorXd::Zero(number_points);
+    }
+};
+
+struct BoundaryConditions
+{
+    Eigen::VectorXd u_bc;
+    Eigen::MatrixXd robin_matrix;
+    Eigen::VectorXd bc_rhs;
     double u_bc_L = 1;
 
-    Eigen::VectorXd x = Eigen::VectorXd::LinSpaced(number_points, domain_start, domain_end);
-    Eigen::VectorXd u = Eigen::VectorXd::Zero(number_points);
-    Eigen::VectorXd u_new = Eigen::VectorXd::Zero(number_points);
-    Eigen::VectorXd u_bc = Eigen::VectorXd::Zero(number_points);
+    BoundaryConditions(int number_points, const Parameters& params, const Mesh& mesh,
+        const SolutionVector& soln)
+    {
+        u_bc = Eigen::VectorXd::Zero(number_points);
+        bc_rhs = Eigen::VectorXd::Zero(2);
+        robin_matrix = createRobinLeftBCMatrix(params,mesh);
+        calcRobinValue(params, mesh, soln);
+        u_bc(u_bc.size() - 1) = u_bc_L;
+    }
 
-    Eigen::MatrixXd createBCMatrix()
+    Eigen::MatrixXd createRobinLeftBCMatrix(const Parameters& params, const Mesh& mesh)
     {
         Eigen::MatrixXd bc_matrix = Eigen::MatrixXd::Zero(2, 2);
         bc_matrix(0, 0) = 2;
         bc_matrix(0, 1) = -1;
-        bc_matrix(1, 0) = -(2 * a * dx) / b;
+        bc_matrix(1, 0) = -(2 * params.a * mesh.dx) / params.b;
         bc_matrix(1, 1) = 1;
         return bc_matrix;
     }
+
+    void calcRobinValue(const Parameters& params, const Mesh& mesh, const SolutionVector& soln)
+    {
+        bc_rhs(0) = soln.u(0);
+        bc_rhs(1) = soln.u(0) - (2 * params.c * mesh.dx) / params.b;
+
+        Eigen::VectorXd f_bc = robin_matrix.partialPivLu().solve(bc_rhs);
+        u_bc(0) = f_bc(0);
+    }
 };
 
-// Laplacian operator creation
-Eigen::MatrixXd createLaplacianOperator(const int number_points)
+struct Discretization
 {
-    Eigen::VectorXd diagonal_Laplace = -2 * Eigen::VectorXd::Ones(number_points);
+    Eigen::MatrixXd laplacian_matrix;
 
-    Eigen::VectorXd upper_diagonal_Laplace = Eigen::VectorXd::Ones(number_points - 1);
+    Discretization(const int number_points)
+    {
+        laplacian_matrix = createLaplacianOperator(number_points);
+    }
+        
+    Eigen::MatrixXd createLaplacianOperator(const int number_points)
+    {
+        Eigen::VectorXd diagonal_Laplace = -2 * Eigen::VectorXd::Ones(number_points);
 
-    Eigen::VectorXd lower_diagonal_Laplace = Eigen::VectorXd::Ones(number_points - 1);
+        Eigen::VectorXd upper_diagonal_Laplace = Eigen::VectorXd::Ones(number_points - 1);
 
-    Eigen::MatrixXd laplacian_matrix = Eigen::MatrixXd::Zero(number_points, number_points);
+        Eigen::VectorXd lower_diagonal_Laplace = Eigen::VectorXd::Ones(number_points - 1);
 
-    laplacian_matrix.diagonal() = diagonal_Laplace;
-    laplacian_matrix.diagonal(1) = upper_diagonal_Laplace;
-    laplacian_matrix.diagonal(-1) = lower_diagonal_Laplace;
+        Eigen::MatrixXd laplacian_matrix = Eigen::MatrixXd::Zero(number_points, number_points);
 
-    return laplacian_matrix;
-}
+        laplacian_matrix.diagonal() = diagonal_Laplace;
+        laplacian_matrix.diagonal(1) = upper_diagonal_Laplace;
+        laplacian_matrix.diagonal(-1) = lower_diagonal_Laplace;
 
-// Calculate the robin u_bc value
-double calcRobinValue(const SimulationParameters& params, const Eigen::MatrixXd bc_matrix)
+        return laplacian_matrix;
+    }
+};
+
+struct TimeIntegration
 {
-    Eigen::VectorXd bc_rhs = Eigen::VectorXd::Zero(2);
-    bc_rhs(0) = params.u(0);
-    bc_rhs(1) = params.u(0) - (2 * params.c * params.dx) / params.b;
+    void explicitEuler(const Parameters& params, const Mesh& mesh, SolutionVector& soln, 
+        const BoundaryConditions& boundaries, const Discretization& discrete)
+    {
+        soln.u_new = soln.u + ((params.alpha * params.dt) / (mesh.dx * mesh.dx)) * (discrete.laplacian_matrix * soln.u + boundaries.u_bc);
+        soln.u = soln.u_new;
+    }
+};
 
-    Eigen::VectorXd f_bc = bc_matrix.partialPivLu().solve(bc_rhs);
-
-    return f_bc(0);
-}
-
-// Explict euler integration
-Eigen::MatrixXd explicitEuler(SimulationParameters& params, const Eigen::MatrixXd laplacian_matrix, const Eigen::MatrixXd bc_matrix)
-{
-    params.u_bc(0) = calcRobinValue(params, bc_matrix);
-    params.u_bc(params.u_bc.size() - 1) = params.u_bc_L;
-
-    Eigen::MatrixXd u_new = params.u + ((params.alpha * params.dt) / (params.dx * params.dx)) * (laplacian_matrix * params.u + params.u_bc);
-
-    return u_new;
-}
-
-// Data out function
 void writeToFile(std::ofstream& file, const Eigen::VectorXd& u)
 {
     file << u.transpose() << std::endl;
 }
 
-
 int main()
 {
-    SimulationParameters params;
+    double domainStart = 0.0;
+    double domainEnd = 1.0;
+    double dx = 0.01;
 
-    Eigen::MatrixXd bc_matrix = params.createBCMatrix();
+    Mesh mesh(domainStart, domainEnd, dx);
 
-    std::cout << "Inital u is: " << params.u << std::endl;
+    Parameters params;
+    double alpha{.005};
+    double dt{.0099};
+    double a = 0.4;
+    double b = -0.1;
+    double c = 0.1;
+
+    params.alpha = alpha;
+    params.dt = dt;
+    params.a = a;
+    params.b = b;
+    params.c = c;
+
+    SolutionVector soln(mesh.number_points);
 
     std::ofstream file("u_values.csv");
 
-    writeToFile(file, params.u);
+    //writeToFile(file, soln.u);
 
-    Eigen::MatrixXd laplacian_matrix = createLaplacianOperator(params.number_points);
+    BoundaryConditions boundaries(mesh.number_points, params, mesh, soln);
 
-    // Time loop
-    int number_time_steps{ 15000 };
-    for (int i = 1; i <= number_time_steps; ++i) 
+    Discretization discrete(mesh.number_points);
+
+    TimeIntegration euler_update;
+
+    int number_time_steps = 15000;
+
+    for (int i = 1; i < number_time_steps; ++i)
     {
-        params.u = explicitEuler(params,laplacian_matrix,bc_matrix);
-
-        writeToFile(file, params.u);
-
-        std::cout << "Completed time step " << i << '\n';
+        boundaries.calcRobinValue(params,mesh, soln);
+        euler_update.explicitEuler(params, mesh, soln, boundaries, discrete);
+        std::cout << "Time step: " << i <<'\n';
+        //writeToFile(file, soln.u);
     }
 
-    
-    std::cout << "Solution Vector is:\n" << params.u << std::endl;
+    //file.close();
 
-    file.close(); // Close the file
-
+    std::cout << soln.u << '\n';
+   
     return 0;
 }
