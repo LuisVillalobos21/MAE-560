@@ -1,0 +1,61 @@
+# Ignore Visual Studio temporary files, build results, and other artifacts
+.vs/
+.vscode/
+*.VC.db
+*.VC.VC.opendb
+*.VC.db-shm
+*.VC.db-wal
+*.log
+*.suo
+*.ipch
+*.swp
+*.sdf
+*.sln.docstates
+*.db
+*.jfm
+*.bak
+*.tmp
+*.aps
+*.obj
+*.pdb
+*.exe
+*.dll
+*.lib
+*.exp
+*.idb
+*.lastbuildstate
+*.tlog
+*.log1
+*.vshost.*
+*.unsuccessfulbuild
+ipch/
+obj/
+[Bb]in/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Oo]ut/
+[Tt]est[Rr]esults/
+
+# Ignore CMake generated files
+CMakeCache.txt
+CMakeFiles/
+Testing/
+CMakePresets.json
+
+# MAE_560_Project_1 specific (add any other directories or files you want to exclude)
+# (assuming MAE_560_Project_1/ contains build outputs or files you don't want to track)
+# If MAE_560_Project_1/ contains your source code, do not uncomment the line below.
+#MAE_560_Project_1/
+
+# Ignore other common files
+*.log
+*.bak
+*.swp
+*.class
+
+# Exclude OS-specific files
+.DS_Store
+Thumbs.db
+
