@@ -17,4 +17,4 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /O2")
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 # Add your source files (replace main.cpp with your source files)
-add_executable(MAE_560_Project_1 MAE_560_Project_1/main.cpp)
+add_executable(MAE_560_Project_1 MAE_560_Project_1/main.cpp "MAE_560_Project_1/Mesh.cpp"  "MAE_560_Project_1/SolutionVector.cpp" "MAE_560_Project_1/BoundaryConditions.cpp" "MAE_560_Project_1/Discretization.cpp" "MAE_560_Project_1/TimeIntegration.cpp")
