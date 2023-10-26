@@ -32,7 +32,7 @@ int main()
 
     Parameters params;
     double alpha{ .005 };
-    double dt{ .1 };
+    double dt{ 1.5 };
     double a = 0.4;
     double b = -0.1;
     double c = 0.1;
@@ -59,9 +59,10 @@ int main()
 
     Eigen::VectorXd u_anal = analyticalSolution(mesh.x);
     double error = computeRelativeError(soln.u, u_anal);
-    int i = 1;
 
-    while (error > 1e-2)
+    int i = 1;
+    auto start_time = std::chrono::high_resolution_clock::now();
+    while (error > 1e-3)
     {
         boundaries.calcRobinValue(params, mesh, soln);
         rhs.calcLinearSolveRHS(params, mesh, soln, boundaries, discrete);
@@ -69,16 +70,20 @@ int main()
 
         error = computeRelativeError(soln.u, u_anal);
 
-        std::cout << "Time step: " << i << ", Error: " << error << '\n';
+        //std::cout << "Time step: " << i << ", Error: " << error << '\n';
         //writeToFile(file, soln.u);
 
         ++i;
     }
 
+    auto end_time = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed_seconds = end_time - start_time;
+
     //file.close();
 
     std::cout << "Solution u is: " << soln.u << '\n';
     std::cout << "Simulation ended at time step: " << i << ", with error: " << error << '\n';
+    std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 
     return 0;
 }

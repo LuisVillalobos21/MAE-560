@@ -1,6 +1,7 @@
 #pragma once
 
 #include <iostream>
+#include <chrono>
 #include <Eigen/Dense>
 #include <vector>
 #include <cmath>
