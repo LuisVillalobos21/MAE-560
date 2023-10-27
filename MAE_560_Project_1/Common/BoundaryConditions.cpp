@@ -1,5 +1,6 @@
 #include "BoundaryConditions.hpp"
 
+// ROBIN BC AND DIRECHLET FOR HEAT EQN
 BoundaryConditions::BoundaryConditions(int number_points, const Parameters& params, const Mesh& mesh,
     const SolutionVector& soln)
 {
@@ -27,4 +28,38 @@ void BoundaryConditions::calcRobinValue(const Parameters& params, const Mesh& me
 
     Eigen::VectorXd f_bc = robin_matrix.partialPivLu().solve(bc_rhs);
     u_bc(0) = f_bc(0);
+}
+
+// PERIODIC BC FOR WAVE EQN LAX WENDROFF
+PeriodicBoundaryConditions::PeriodicBoundaryConditions(const WaveParameters& params, const PeriodicMesh& mesh, const SolutionVector& soln)
+{
+    u_bc_diff = Eigen::VectorXd::Zero(mesh.number_points);
+    u_bc_lap = Eigen::VectorXd::Zero(mesh.number_points);
+    calcPeriodicValue(soln,mesh);
+}
+
+void PeriodicBoundaryConditions::calcPeriodicValue(const SolutionVector& soln, const PeriodicMesh& mesh)
+{
+    u_bc_diff(0) = -soln.u(soln.u.size() - 1);    
+    u_bc_diff(u_bc_diff.size() - 1) = soln.u(0);
+
+    u_bc_lap(0) = soln.u(soln.u.size() - 1);
+    u_bc_lap(u_bc_lap.size() - 1) = soln.u(0);
+}
+
+// PERIODIC BC FOR WAVE EQN AB2
+AB2PeriodicBoundaryConditions::AB2PeriodicBoundaryConditions(const WaveParameters& params, const PeriodicMesh& mesh, const SolutionVector& soln)
+{
+    u_bc_diff1 = Eigen::VectorXd::Zero(mesh.number_points);
+    u_bc_diff2 = Eigen::VectorXd::Zero(mesh.number_points);
+    calcPeriodicValueAB2(soln, mesh);
+}
+
+void AB2PeriodicBoundaryConditions::calcPeriodicValueAB2(const SolutionVector& soln, const PeriodicMesh& mesh)
+{
+    u_bc_diff1(0) = -soln.u(soln.u.size() - 1);
+    u_bc_diff1(u_bc_diff1.size() - 1) = soln.u(0);
+
+    u_bc_diff2(0) = -soln.u_old(soln.u.size() - 1);
+    u_bc_diff2(u_bc_diff2.size() - 1) = soln.u_old(0);
 }

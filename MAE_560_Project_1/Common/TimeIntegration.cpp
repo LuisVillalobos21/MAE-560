@@ -30,3 +30,20 @@ void CNTimeIntegration::thomasAlgorithm(const CNDiscretization& discrete, const 
         soln.u(i) = (d(i) - c(i) * soln.u(i + 1)) / b(i);
     }
 }
+
+void LWTimeIntegration::laxWendroff(const WaveParameters& params, const PeriodicMesh& mesh, SolutionVector& soln,
+    const PeriodicBoundaryConditions& boundaries, const LWDiscretization& discrete)
+{
+    soln.u_new = soln.u + ((- 0.5 * params.c * params.dt) / mesh.dx) * (discrete.differentiaion_matrix * soln.u + boundaries.u_bc_diff) +
+        ((0.5 * params.c * params.c * params.dt * params.dt) / (mesh.dx * mesh.dx)) * (discrete.laplacian_matrix * soln.u + boundaries.u_bc_lap);
+    soln.u = soln.u_new;
+}
+
+void AB2TimeIntegration::AB2(const WaveParameters& params, const PeriodicMesh& mesh, SolutionVector& soln,
+    const AB2PeriodicBoundaryConditions& boundaries, const LWDiscretization& discrete)
+{
+    soln.u_new = soln.u + ((.75 * -params.c * params.dt) / mesh.dx) * (discrete.differentiaion_matrix * soln.u + boundaries.u_bc_diff1) +
+        ((.25 * params.c * params.dt) / mesh.dx) * (discrete.differentiaion_matrix * soln.u_old + boundaries.u_bc_diff2);
+    soln.u_old = soln.u;
+    soln.u = soln.u_new;
+}

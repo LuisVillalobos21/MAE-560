@@ -9,3 +9,9 @@ struct Parameters
     double b;
     double c;
 };
+
+struct WaveParameters
+{
+    double c;
+    double dt;
+};

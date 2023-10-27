@@ -18,21 +18,41 @@ include_directories(${CMAKE_SOURCE_DIR}/MAE_560_Project_1/common)
 
 # Add your source files
 add_executable(
-    Exp_Euler
+    HEAT_Exp_Euler
     MAE_560_Project_1/Solvers/Heat_Eqn_Explicit_Euler/main.cpp
     MAE_560_Project_1/common/Mesh.cpp
     MAE_560_Project_1/common/SolutionVector.cpp
     MAE_560_Project_1/common/BoundaryConditions.cpp
     MAE_560_Project_1/common/Discretization.cpp
     MAE_560_Project_1/common/TimeIntegration.cpp
- "MAE_560_Project_1/Common/FormLinearSolveEqn.cpp")
+    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp "MAE_560_Project_1/Common/ReadData.cpp")
 
 add_executable(
-    CN
+    HEAT_CN
     MAE_560_Project_1/Solvers/Heat_Eqn_CN/main.cpp
     MAE_560_Project_1/common/Mesh.cpp
     MAE_560_Project_1/common/SolutionVector.cpp
     MAE_560_Project_1/common/BoundaryConditions.cpp
     MAE_560_Project_1/common/Discretization.cpp
     MAE_560_Project_1/common/TimeIntegration.cpp
- "MAE_560_Project_1/Common/FormLinearSolveEqn.cpp")
+    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp "MAE_560_Project_1/Common/ReadData.cpp")
+
+add_executable(
+    WAVE_AB2
+    MAE_560_Project_1/Solvers/Wave_Eqn_AB2/WAVE_AB2.cpp
+    MAE_560_Project_1/common/Mesh.cpp
+    MAE_560_Project_1/common/SolutionVector.cpp
+    MAE_560_Project_1/common/BoundaryConditions.cpp
+    MAE_560_Project_1/common/Discretization.cpp
+    MAE_560_Project_1/common/TimeIntegration.cpp
+    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp "MAE_560_Project_1/Common/ReadData.cpp")
+
+add_executable(
+    WAVE_LW
+    MAE_560_Project_1/Solvers/Wave_Eqn_LW/WAVE_LW.cpp
+    MAE_560_Project_1/common/Mesh.cpp
+    MAE_560_Project_1/common/SolutionVector.cpp
+    MAE_560_Project_1/common/BoundaryConditions.cpp
+    MAE_560_Project_1/common/Discretization.cpp
+    MAE_560_Project_1/common/TimeIntegration.cpp
+    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp "MAE_560_Project_1/Common/ReadData.cpp")
