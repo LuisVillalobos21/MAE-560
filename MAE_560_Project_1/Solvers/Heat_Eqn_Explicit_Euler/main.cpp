@@ -62,7 +62,7 @@ int main()
     auto start_time = std::chrono::high_resolution_clock::now();
     while (error > 1e-3)
     {
-        boundaries.calcRobinValue(params,mesh, soln);
+        boundaries.calcRobinValueExp(params,mesh, soln);
         euler_update.explicitEuler(params, mesh, soln, boundaries, discrete);
 
         error = computeRelativeError(soln.u, u_anal);

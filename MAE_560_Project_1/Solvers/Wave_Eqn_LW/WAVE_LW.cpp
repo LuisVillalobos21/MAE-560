@@ -49,7 +49,7 @@ int main()
 
     //writeToFile(file, soln.u);
 
-    int number_time_steps = 2;
+    int number_time_steps = 750;
     int step = 0;
     auto start_time = std::chrono::high_resolution_clock::now();
     for(int i = 1; i < number_time_steps; ++i)

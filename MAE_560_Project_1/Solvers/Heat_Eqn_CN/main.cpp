@@ -48,10 +48,14 @@ int main()
     BoundaryConditions boundaries(mesh.number_points, params, mesh, soln);
 
     CNDiscretization discrete(mesh.number_points,params,mesh);
+    discrete.cn_matrix(0, 0) = (((-params.alpha * params.dt) / (2 * mesh.dx * mesh.dx)) * -params.b) / (params.a * mesh.dx - params.b) + 
+        (1 + (params.alpha * params.dt) / (mesh.dx * mesh.dx));
 
     FormLinearSolveEqn rhs(mesh.number_points, params, mesh, soln, boundaries, discrete);
 
     CNTimeIntegration cn_update;
+
+    std::cout << "u_bc is: " << boundaries.u_bc << '\n';
 
     //std::ofstream file("u_values.csv");
 

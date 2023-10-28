@@ -5,10 +5,12 @@ BoundaryConditions::BoundaryConditions(int number_points, const Parameters& para
     const SolutionVector& soln)
 {
     u_bc = Eigen::VectorXd::Zero(number_points);
-    bc_rhs = Eigen::VectorXd::Zero(2);
-    robin_matrix = createRobinLeftBCMatrix(params, mesh);
     calcRobinValue(params, mesh, soln);
-    u_bc(u_bc.size() - 1) = u_bc_L;
+    u_bc(u_bc.size() - 1) = ((params.alpha * params.dt) / (mesh.dx * mesh.dx)) * u_bc_R;
+
+    u_bc_exp = Eigen::VectorXd::Zero(number_points);
+    calcRobinValueExp(params, mesh, soln);
+    u_bc_exp(u_bc_exp.size() - 1) = ((params.alpha * params.dt) / ( mesh.dx * mesh.dx)) * u_bc_R;
 }
 
 Eigen::MatrixXd BoundaryConditions::createRobinLeftBCMatrix(const Parameters& params, const Mesh& mesh)
@@ -23,11 +25,12 @@ Eigen::MatrixXd BoundaryConditions::createRobinLeftBCMatrix(const Parameters& pa
 
 void BoundaryConditions::calcRobinValue(const Parameters& params, const Mesh& mesh, const SolutionVector& soln)
 {
-    bc_rhs(0) = soln.u(0);
-    bc_rhs(1) = soln.u(0) - (2 * params.c * mesh.dx) / params.b;
+    u_bc(0) = ((params.alpha * params.dt) / (2 * mesh.dx * mesh.dx)) * ((params.c - (params.b / mesh.dx) * soln.u(0)) / (params.a - (params.b / mesh.dx)) + params.c / (params.a - (params.b / mesh.dx)));
+}
 
-    Eigen::VectorXd f_bc = robin_matrix.partialPivLu().solve(bc_rhs);
-    u_bc(0) = f_bc(0);
+void BoundaryConditions::calcRobinValueExp(const Parameters& params, const Mesh& mesh, const SolutionVector& soln)
+{
+    u_bc_exp(0) = ((params.alpha * params.dt) / (mesh.dx * mesh.dx)) * ((params.c - (params.b / mesh.dx) * soln.u(0)) / (params.a - (params.b / mesh.dx)));
 }
 
 // PERIODIC BC FOR WAVE EQN LAX WENDROFF
