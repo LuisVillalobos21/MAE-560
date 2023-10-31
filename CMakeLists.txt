@@ -25,7 +25,7 @@ add_executable(
     MAE_560_Project_1/common/BoundaryConditions.cpp
     MAE_560_Project_1/common/Discretization.cpp
     MAE_560_Project_1/common/TimeIntegration.cpp
-    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp "MAE_560_Project_1/Common/ReadData.cpp")
+    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp)
 
 add_executable(
     HEAT_CN
@@ -35,7 +35,7 @@ add_executable(
     MAE_560_Project_1/common/BoundaryConditions.cpp
     MAE_560_Project_1/common/Discretization.cpp
     MAE_560_Project_1/common/TimeIntegration.cpp
-    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp "MAE_560_Project_1/Common/ReadData.cpp")
+    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp)
 
 add_executable(
     WAVE_AB2
@@ -45,7 +45,8 @@ add_executable(
     MAE_560_Project_1/common/BoundaryConditions.cpp
     MAE_560_Project_1/common/Discretization.cpp
     MAE_560_Project_1/common/TimeIntegration.cpp
-    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp "MAE_560_Project_1/Common/ReadData.cpp")
+    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp
+    MAE_560_Project_1/Common/ReadData.cpp)
 
 add_executable(
     WAVE_LW
@@ -55,4 +56,12 @@ add_executable(
     MAE_560_Project_1/common/BoundaryConditions.cpp
     MAE_560_Project_1/common/Discretization.cpp
     MAE_560_Project_1/common/TimeIntegration.cpp
-    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp "MAE_560_Project_1/Common/ReadData.cpp")
+    MAE_560_Project_1/Common/FormLinearSolveEqn.cpp)
+
+add_executable(
+    ADV_DIFF
+    MAE_560_Project_1/Solvers/Adv_Diff/ADV_DIFF.cpp)
+
+add_executable(
+    HEAT_RK4
+    MAE_560_Project_1/Solvers/Heat_Eqn_RK4/HEAT_RK4.cpp)
