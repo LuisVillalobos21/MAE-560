@@ -2,6 +2,8 @@
 #include <fstream>
 #include <Eigen/Dense>
 
+// ADVECTION DIFFUSION EQUATION
+
 struct MeshStruct
 {
     double dx;
