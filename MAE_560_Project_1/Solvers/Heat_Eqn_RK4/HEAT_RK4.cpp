@@ -220,18 +220,25 @@ int main()
     RK4Struct rk(mesh, params, soln, src, op, BCs);
 
     std::cout << "Intial u is " << '\n' << soln.u << '\n';
-    std::ofstream file("heatrk4.csv");
-    writeToFile(file, soln.u);
+    std::ofstream file("heatrk4_t196.csv");
+    //writeToFile(file, soln.u);
 
     double time = 0;
-    for (int i = 1; i < 19600; ++i)
+    for (int i = 1; i < 19601; ++i)
     {
         time += params.dt;
         rk.timeMarchRK4(time);
-        writeToFile(file, soln.u);
+        //writeToFile(file, soln.u);
     }
 
-    std::cout << "Solution u is " << '\n' << soln.u << '\n';
+    Eigen::VectorXd uplot = Eigen::VectorXd::Zero(mesh.number_points + 2);
+    uplot(0) = ((params.c - (params.b / mesh.dx) * soln.u(0)) / (params.a - (params.b / mesh.dx)));
+    uplot.segment(1, mesh.number_points) = soln.u;
+    uplot(uplot.size() - 1) = params.d * mesh.dx + soln.u(soln.u.size() - 1);
+
+    //std::cout << "Solution u is " << '\n' << soln.u << '\n';
+
+    writeToFile(file, uplot);
     file.close();
 
 	return 0;

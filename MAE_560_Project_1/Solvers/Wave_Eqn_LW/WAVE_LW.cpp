@@ -29,7 +29,7 @@ int main()
 
     WaveParameters params;
     double c = 1;
-    double CFL = .4;
+    double CFL = .8;
     double dt{ (CFL * dx) / c };
 
     params.dt = dt;
@@ -45,18 +45,24 @@ int main()
 
     LWTimeIntegration LWupdate;
 
-    std::ofstream file("AB2_initial_data_CFL_4.csv");
+    std::ofstream file("LW_dirichlet.csv");
 
     //writeToFile(file, soln.u);
+    //std::cout << mesh.x << '\n';
+    //std::cout << discrete.differentiaion_matrix << '\n';
+    //std::cout << "Intial u is" << soln.u << '\n';
 
-    int number_time_steps = 750;
+
+    int number_time_steps = 376;
     int step = 0;
     auto start_time = std::chrono::high_resolution_clock::now();
     for(int i = 1; i < number_time_steps; ++i)
     {
         boundaries.calcPeriodicValue(soln,mesh);
+        //std::cout << "Boundary vector is " << boundaries.u_bc_diff << '\n';
         LWupdate.laxWendroff(params, mesh, soln, boundaries, discrete);
 
+        
         //std::cout << "Time step: " << i << '\n';
         writeToFile(file, soln.u);
 
@@ -66,10 +72,11 @@ int main()
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = end_time - start_time;
 
+    //writeToFile(file, soln.u);
     file.close();
 
     std::cout << "Solution u is: " << soln.u << '\n';
-    std::cout << "Mesh is: " << mesh.x << '\n';
+    //std::cout << "Mesh is: " << mesh.x << '\n';
     std::cout << "Simulation ended at time step: " << step << '\n';
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 

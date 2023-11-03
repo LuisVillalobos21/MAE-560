@@ -43,11 +43,17 @@ PeriodicBoundaryConditions::PeriodicBoundaryConditions(const WaveParameters& par
 
 void PeriodicBoundaryConditions::calcPeriodicValue(const SolutionVector& soln, const PeriodicMesh& mesh)
 {
-    u_bc_diff(0) = -soln.u(soln.u.size() - 1);    
-    u_bc_diff(u_bc_diff.size() - 1) = soln.u(0);
+    //u_bc_diff(0) = -soln.u(soln.u.size() - 1);    
+    //u_bc_diff(u_bc_diff.size() - 1) = soln.u(0);
 
-    u_bc_lap(0) = soln.u(soln.u.size() - 1);
-    u_bc_lap(u_bc_lap.size() - 1) = soln.u(0);
+    //u_bc_lap(0) = soln.u(soln.u.size() - 1);
+    //u_bc_lap(u_bc_lap.size() - 1) = soln.u(0);
+
+    u_bc_diff(0) = 0;
+    u_bc_diff(u_bc_diff.size() - 1) = 0;
+
+    u_bc_lap(0) = 0;
+    u_bc_lap(u_bc_lap.size() - 1) = 0;
 }
 
 // PERIODIC BC FOR WAVE EQN AB2

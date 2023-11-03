@@ -51,7 +51,7 @@ int main()
 
     TimeIntegration euler_update;
 
-    //std::ofstream file("u_values.csv");
+    std::ofstream file("heat_explicit.csv");
 
     //writeToFile(file, soln.u);
 
@@ -75,9 +75,17 @@ int main()
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = end_time - start_time;
 
-    //file.close();
+    Eigen::VectorXd uplot = Eigen::VectorXd::Zero(mesh.number_points + 2);
+    uplot(0) = ((params.c - (params.b / mesh.dx) * soln.u(0)) / (params.a - (params.b / mesh.dx)));
+    uplot.segment(1, mesh.number_points) = soln.u;
+    uplot(uplot.size() - 1) = 1;
 
-    std::cout << "Solution u is: " << soln.u << '\n';
+    writeToFile(file, uplot);
+    file.close();
+
+    std::cout << "Mesh is " << mesh.x << '\n';
+    //std::cout << "Solution u is: " << soln.u << '\n';
+    std::cout << "Solution u is: " << uplot << '\n';
     std::cout << "Simulation ended at time step: " << i << ", with error: " << error << '\n';
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
     

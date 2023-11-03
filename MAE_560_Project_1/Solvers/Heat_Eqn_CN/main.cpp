@@ -32,7 +32,7 @@ int main()
 
     Parameters params;
     double alpha{ .005 };
-    double dt{ 1.5 };
+    double dt{ 1.25 };
     double a = 0.4;
     double b = -0.1;
     double c = 0.1;
@@ -55,9 +55,9 @@ int main()
 
     CNTimeIntegration cn_update;
 
-    std::cout << "u_bc is: " << boundaries.u_bc << '\n';
+    //std::cout << "u_bc is: " << boundaries.u_bc << '\n';
 
-    //std::ofstream file("u_values.csv");
+    std::ofstream file("heat_CN.csv");
 
     //writeToFile(file, soln.u);
 
@@ -66,7 +66,7 @@ int main()
 
     int i = 1;
     auto start_time = std::chrono::high_resolution_clock::now();
-    while (error > 1e-3)
+    while (error > 1e-10)
     {
         boundaries.calcRobinValue(params, mesh, soln);
         rhs.calcLinearSolveRHS(params, mesh, soln, boundaries, discrete);
@@ -83,9 +83,16 @@ int main()
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = end_time - start_time;
 
-    //file.close();
+    Eigen::VectorXd uplot = Eigen::VectorXd::Zero(mesh.number_points + 2);
+    uplot(0) = ((params.c - (params.b / mesh.dx) * soln.u(0)) / (params.a - (params.b / mesh.dx)));
+    uplot.segment(1, mesh.number_points) = soln.u;
+    uplot(uplot.size() - 1) = 1;
 
-    std::cout << "Solution u is: " << soln.u << '\n';
+    writeToFile(file, uplot);
+    file.close();
+
+    //std::cout << "Solution u is: " << soln.u << '\n';
+    std::cout << "Solution u is: " << uplot << '\n';
     std::cout << "Simulation ended at time step: " << i << ", with error: " << error << '\n';
     std::cout << "Elapsed time: " << elapsed_seconds.count() << "s\n";
 

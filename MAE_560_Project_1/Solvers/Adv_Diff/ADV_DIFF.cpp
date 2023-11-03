@@ -68,6 +68,13 @@ struct BCStruct
         u_bc_diff_AB2(soln.u.size() - 1) = (-1.5 * params.c * params.dt) * ((0.5 * soln.u(0)) / mesh.dx) + 
             (0.5 * params.c * params.dt) * (0.5 * soln.u_old(0) / mesh.dx);
     }
+
+    void updateBC_diff_AB22(const ParameterStruct& params, const MeshStruct mesh, const SolutionStruct& soln)
+    {
+        u_bc_diff_AB2(0) = (1.5 * params.c * params.dt) * ((soln.u(soln.u.size() - 1)) / mesh.dx) -
+            (0.5 * params.c * params.dt) * (soln.u_old(soln.u_old.size() - 1) / mesh.dx);
+    } 
+
     void updateBC_diff_exp(const ParameterStruct& params, const MeshStruct mesh, const SolutionStruct& soln)
     {
         u_bc_diff_exp(0) = (params.c * params.dt) * ((0.5 * soln.u(soln.u.size() - 1)) / mesh.dx);
@@ -108,11 +115,13 @@ struct OperatorStruct
 {
     Eigen::MatrixXd laplacian_matrix;
     Eigen::MatrixXd differentiation_matrix;
+    Eigen::MatrixXd differentiation_matrix2;
 
     OperatorStruct(const MeshStruct mesh, const ParameterStruct params)
     {
         laplacian_matrix = createLaplacianMatrix(mesh,params);
         differentiation_matrix = createDifferentiationMatrix(mesh,params);
+        differentiation_matrix2 = createDifferentiationMatrix2(mesh, params);
     }
 
     Eigen::MatrixXd createLaplacianMatrix(const MeshStruct mesh, const ParameterStruct params)
@@ -145,6 +154,20 @@ struct OperatorStruct
 
         return differentiaion_matrix;
     }
+
+    Eigen::MatrixXd createDifferentiationMatrix2(const MeshStruct mesh, const ParameterStruct params)
+    {
+        Eigen::VectorXd diagonal = (1.0 / mesh.dx) * Eigen::VectorXd::Ones(mesh.number_points);
+
+        Eigen::VectorXd lower_diagonal = (1.0 / mesh.dx) * -Eigen::VectorXd::Ones(mesh.number_points - 1);
+
+        Eigen::MatrixXd differentiation_matrix2 = Eigen::MatrixXd::Zero(mesh.number_points, mesh.number_points);
+
+        differentiation_matrix2.diagonal() = diagonal;
+        differentiation_matrix2.diagonal(-1) = lower_diagonal;
+
+        return differentiation_matrix2;
+    }
 };
 
 struct RHSstruct
@@ -163,6 +186,12 @@ struct RHSstruct
     void d_AB2_update(const ParameterStruct& params, const MeshStruct mesh, const SolutionStruct& soln, const OperatorStruct op, const BCStruct boundaries)
     {
         d_AB2 = soln.u + (-1.5 * params.c * params.dt) * (op.differentiation_matrix * soln.u) + (0.5 * params.c * params.dt) * (op.differentiation_matrix * soln.u_old) +
+            (0.5 * params.dt) * (op.laplacian_matrix * soln.u) + boundaries.u_bc_diff_AB2 + boundaries.u_bc_laplacian;
+    }
+
+    void d_AB2_update2(const ParameterStruct& params, const MeshStruct mesh, const SolutionStruct& soln, const OperatorStruct op, const BCStruct boundaries)
+    {
+        d_AB2 = soln.u + (-1.5 * params.c * params.dt) * (op.differentiation_matrix2 * soln.u) + (0.5 * params.c * params.dt) * (op.differentiation_matrix2 * soln.u) +
             (0.5 * params.dt) * (op.laplacian_matrix * soln.u) + boundaries.u_bc_diff_AB2 + boundaries.u_bc_laplacian;
     }
 
@@ -211,13 +240,30 @@ void writeToFile(std::ofstream& file, const Eigen::VectorXd& u)
     file << u.transpose() << std::endl;
 }
 
+//Eigen::VectorXd computeInitialCondition(const Eigen::VectorXd& x)
+//{
+//    Eigen::VectorXd u = Eigen::VectorXd::Zero(x.size());
+//
+//    for (int i = 0; i < x.size(); ++i)
+//    {
+//        u(i) = std::exp(-(x(i) - 0.5) * (x(i) - 0.5) / 0.01);
+//    }
+//
+//    return u;
+//}
+
 Eigen::VectorXd computeInitialCondition(const Eigen::VectorXd& x)
 {
     Eigen::VectorXd u = Eigen::VectorXd::Zero(x.size());
 
-    for (int i = 0; i < x.size(); ++i)
+    // Calculate starting and ending indices for the middle 25 points
+    int mid = x.size() / 2;
+    int start = mid - 12;  // 12 points before the middle
+    int end = mid + 12;    // 12 points after the middle
+
+    for (int i = start; i <= end; ++i)
     {
-        u(i) = std::exp(-(x(i) - 0.5) * (x(i) - 0.5) / 0.01);
+        u(i) = 0.5;
     }
 
     return u;
@@ -227,14 +273,14 @@ int main()
 {
     MeshStruct mesh(0, 1, .01);
 
-    ParameterStruct params(.005, 1, .0075, mesh);
+    ParameterStruct params(.005, 1, .0097, mesh);
 
     SolutionStruct soln(mesh);
 
     Eigen::VectorXd initialCondition = computeInitialCondition(mesh.x);
     soln.u = initialCondition;
-    std::ofstream file("adv_diff.csv");
-    writeToFile(file, soln.u);
+    std::ofstream file("adv_diff_square_central.csv");
+    //writeToFile(file, soln.u);
     //std::cout << "U intial is " << '\n' << soln.u << '\n';
 
     OperatorStruct op(mesh, params);
@@ -264,18 +310,13 @@ int main()
         writeToFile(file, soln.u);
     }
     
-    //std::cout << "U old from explicit " << '\n' << soln.u_old << '\n';
-    //std::cout << "U from explicit " << '\n' << soln.u << '\n';
+    ////std::cout << "U old from explicit " << '\n' << soln.u_old << '\n';
+    ////std::cout << "U from explicit " << '\n' << soln.u << '\n';
 
-    for (int i = 1; i < 20000; ++i)
+    for (int i = 1; i < 50; ++i)
     {
         boundaries.updateBC_diff_AB2(params, mesh, soln);
         boundaries.updateBC_lap(params, mesh, soln);
-        //if (i == 999)
-        //{
-        //    std::cout << "U old in AB2 update " << i << '\n' << soln.u_old << '\n';
-        //    std::cout << "U in AB2 update " << i << '\n' << soln.u << '\n';
-        //}
         rhs.d_AB2_update(params, mesh, soln, op, boundaries);
 
         soln.u_old = soln.u;
@@ -293,6 +334,7 @@ int main()
         writeToFile(file, soln.u);
     }
 
+    //writeToFile(file, soln.u);
     file.close();
     
     std::cout << "Solution is "<< '\n' << soln.u << '\n';

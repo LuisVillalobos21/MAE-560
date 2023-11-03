@@ -46,17 +46,21 @@ int main()
 
     AB2TimeIntegration AB2update;
 
-    std::ofstream file("u_AB2.csv");
+    std::ofstream file("AB2_CFL_4.csv");
 
-    writeToFile(file, soln.u);
+    //writeToFile(file, soln.u);
 
-    int number_time_steps = 750;
+    int number_time_steps = 1001;
     int step = 0;
     auto start_time = std::chrono::high_resolution_clock::now();
     for (int i = 1; i < number_time_steps; ++i)
     {
+        //std::cout << "Current u is " << soln.u << '\n';
+        //std::cout << "Old u is " << soln.u_old << '\n';
         boundaries.calcPeriodicValueAB2(soln, mesh);
         AB2update.AB2(params, mesh, soln, boundaries, discrete);
+        //std::cout << "Updated u is " << soln.u << '\n';
+        //std::cout << "New old u is " << soln.u_old << '\n';
 
         //std::cout << "Time step: " << i << '\n';
         writeToFile(file, soln.u);
@@ -66,6 +70,7 @@ int main()
 
     auto end_time = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed_seconds = end_time - start_time;
+    //writeToFile(file, soln.u);
 
     file.close();
 
